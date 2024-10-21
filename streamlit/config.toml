@@ -1,6 +1,6 @@
 [server]
 headless = true
-enableCORS = true
+enableCORS = false
 enableXsrfProtection = false
 
 [browser]
