@@ -1,9 +1,15 @@
 import streamlit as st
 import pandas as pd
 import groq
+import os
+
+# Check if the API key is set
+if "GROQ_API_KEY" not in os.environ and "GROQ_API_KEY" not in st.secrets:
+    st.error("GROQ_API_KEY is not set. Please set it as an environment variable or in Streamlit secrets.")
+    st.stop()
 
 # Initialize Groq client
-client = groq.Groq(api_key=st.secrets["GROQ_API_KEY"])
+client = groq.Groq(api_key=os.environ.get("GROQ_API_KEY") or st.secrets["GROQ_API_KEY"])
 
 # Function to load data from CSV
 @st.cache_data
