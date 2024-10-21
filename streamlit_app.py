@@ -1,15 +1,9 @@
 import streamlit as st
 import pandas as pd
-import os
-from dotenv import load_dotenv
 import groq
 
-# Load environment variables
-load_dotenv()
-
 # Initialize Groq client
-groq_api_key = os.getenv("GROQ_API_KEY")
-client = groq.Groq(api_key=groq_api_key)
+client = groq.Groq(api_key=st.secrets["GROQ_API_KEY"])
 
 # Function to load data from CSV
 @st.cache_data
@@ -32,9 +26,6 @@ def generate_response(prompt, context):
     )
     
     return chat_completion.choices[0].message.content
-
-# Check if running in Streamlit Cloud
-is_streamlit_cloud = os.getenv('STREAMLIT_RUN_ON_SAVE') == 'true'
 
 # Streamlit app
 def main():
