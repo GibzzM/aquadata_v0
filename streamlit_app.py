@@ -16,9 +16,84 @@ client = groq.Groq(api_key=os.environ.get("GROQ_API_KEY") or st.secrets["GROQ_AP
 def load_csv_data(file_path):
     return pd.read_csv(file_path)
 
+# Function to check if question is water-related
+def is_water_related(question):
+    water_keywords = [
+        # Cuerpos de agua
+        'agua', 'water', 'lago', 'lake', 'río', 'river', 'laguna', 'pond', 
+        'arroyo', 'stream', 'presa', 'dam', 'embalse', 'reservoir',
+        'manantial', 'spring', 'costa', 'coast', 'mar', 'sea',
+        
+        # Calidad y parámetros
+        'calidad', 'quality', 'ph', 'hidric', 'hídric',
+        'contamin', 'pollution', 'turbidez', 'turbidity',
+        'temperatura', 'temperature', 'oxígeno', 'oxygen',
+        'conductividad', 'conductivity', 'sediment', 'sedimento',
+        
+        # Limpieza y tratamiento
+        'limpi', 'clean', 'tratamiento', 'treatment', 'purific',
+        'filtr', 'filter', 'desinfec', 'disinfect', 'potabil',
+        'sanea', 'sanit', 'depura', 'purify',
+        
+        # Usos prácticos
+        'consumo', 'consumption', 'beber', 'drinking',
+        'riego', 'irrigation', 'agricultura', 'agriculture',
+        'industrial', 'industry', 'recreativ', 'recreational',
+        'pesca', 'fishing', 'nadar', 'swimming', 'navegación',
+        'doméstico', 'domestic', 'potable', 'portable',
+        
+        # Mantenimiento y conservación
+        'manteni', 'maintenance', 'conserva', 'conservation',
+        'restaurar', 'restoration', 'rehabilita', 'rehabilitation',
+        'preserva', 'preserve', 'proteg', 'protect',
+        
+        # Problemas y soluciones
+        'erosión', 'erosion', 'residuo', 'waste',
+        'basura', 'trash', 'contamina', 'pollut',
+        'vertido', 'discharge', 'derrame', 'spill'
+    ]
+    return any(keyword.lower() in question.lower() for keyword in water_keywords)
+
 # Function to generate response using Groq API
 def generate_response(prompt, context):
-    system_prompt = "You are a helpful assistant that answers questions based on the provided context about aquatic data."
+    if not is_water_related(prompt):
+        return "Lo siento, solo puedo responder preguntas relacionadas con la calidad del agua, cuerpos de agua y sus usos prácticos. Por favor, reformula tu pregunta para que se relacione con estos temas."
+
+    system_prompt = """You are a specialized water quality data assistant with expertise in practical water uses and water body management. You answer questions about:
+
+1. Water Quality & Parameters:
+   - Water quality measurements and standards
+   - Physical, chemical, and biological parameters
+   - Contamination levels and their implications
+
+2. Water Bodies:
+   - Lakes, rivers, ponds, streams, reservoirs
+   - Coastal waters and marine environments
+   - Natural springs and groundwater
+
+3. Cleaning & Treatment:
+   - Water body cleaning methods
+   - Treatment processes and technologies
+   - Purification and filtration systems
+   - Maintenance and restoration practices
+
+4. Practical Uses:
+   - Drinking water requirements
+   - Agricultural irrigation
+   - Industrial applications
+   - Recreational activities (swimming, fishing)
+   - Domestic use considerations
+
+5. Conservation & Management:
+   - Environmental protection
+   - Ecosystem preservation
+   - Sustainable water use
+   - Pollution prevention
+
+Base your answers on the provided context data and focus on practical, actionable information. If discussing cleaning or treatment, include relevant quality parameters and standards. For practical uses, consider safety requirements and quality thresholds.
+
+Remember: Provide specific, practical advice while maintaining technical accuracy."""
+
     messages = [
         {"role": "system", "content": system_prompt},
         {"role": "user", "content": f"Context: {context}\n\nQuestion: {prompt}"}
@@ -76,8 +151,13 @@ def main():
 
     # Chatbot interface
     st.header("AquaData Chatbot")
+    st.write("""Este chatbot está especializado en responder preguntas sobre:
+    - Calidad del agua y parámetros hídricos
+    - Limpieza y tratamiento de cuerpos de agua
+    - Usos prácticos del agua (consumo, agricultura, recreación)
+    - Conservación y mantenimiento de recursos hídricos""")
     with st.container():
-        user_input = st.text_area("Ask a question about the AquaData:", height=100)
+        user_input = st.text_area("Haz una pregunta sobre calidad del agua, limpieza de cuerpos de agua o usos prácticos:", height=100)
         if st.button("Send"):
             if user_input:
                 # Convert filtered data to string and truncate to approx. 3000 tokens
@@ -88,9 +168,6 @@ def main():
                     response = generate_response(user_input, truncated_context)
                 st.subheader("Chatbot Response:")
                 st.write(response)
-                
-                # Optionally, show the truncated context length
-                st.info(f"Context length: approx. {len(truncated_context) // 4} tokens")
             else:
                 st.warning("Please enter a question.")
     st.write("Fuentes: **CONAGUA** (Comisión Nacional del Agua), Red Nacional de Medición de Calidad del Agua (RENAMECA), SEMARNAT")
@@ -98,3 +175,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+
